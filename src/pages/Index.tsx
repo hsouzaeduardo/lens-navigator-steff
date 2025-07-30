@@ -12,13 +12,62 @@ const Index = () => {
     companyName: string
     targetValuation?: string
     file: File
+    prompts: {
+      skeptical: string
+      contrarian: string
+      optimistic: string
+      cfo: string
+    }
   } | null>(null)
   
   const [lensResults, setLensResults] = useState<LensResult[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
+  // Mock full analysis text - this would come from OpenAI API
+  const mockFullAnalysis = `Axenya Exit Scenario Valuation and Investment Classification
+
+Section 10 — Valuation Scenario Table
+We model five potential exit outcomes for Axenya, each with an estimated probability and exit valuation, based on Latin American healthtech trends, comparable exits, and Axenya's fundamentals:
+
+Write-Off (Failure) – P = 20%, Exit Value = $0M. Axenya fails to achieve scale or monetization and runs out of funding. This could occur if its value proposition (reducing employers' health costs) doesn't pan out or if competition overtakes it. Latin America's volatile macro environment (e.g. economic downturn or regulatory hurdles) could also force a shutdown.
+
+Bear Case (Soft Landing) – P = 25%, Exit Value ≈ $10M. Axenya achieves only modest traction and is acquired in a small-scale M&A (essentially a "talent/tech acquisition" or sale of a small client portfolio). In this scenario, perhaps Axenya serves only on the order of ~50–100k lives and can't differentiate much beyond a typical broker.
+
+Base Case (Average Success) – P = 25%, Exit Value ≈ $75M. Axenya grows into a leading niche player in Brazil (and possibly one other market), securing a few hundred thousand covered lives (e.g. 200–500k lives) and demonstrating some cost savings for clients.
+
+Bull Case (High Success) – P = 20%, Exit Value ≈ $200M. Axenya becomes a dominant corporate health-tech platform in Latin America, serving on the order of ~1 million lives across multiple countries. It demonstrates robust clinical outcomes and significant cost reductions for employers.
+
+Moonshot (Transformational Outcome) – P = 10%, Exit Value ≈ $500M. Axenya achieves a step-change success, emerging as the "Accolade of Latin America" – a platform serving several million lives across LatAm with demonstrable impact on healthcare quality and costs.
+
+Weighted Valuation Total (WVT): Taking the probability-weighted sum of these scenarios:
+Write-Off: 20% * $0 = $0
+Bear: 25% * $10M = $2.5M
+Base: 25% * $75M = $18.8M
+Bull: 20% * $200M = $40.0M
+Moonshot: 10% * $500M = $50.0M
+WVT ≈ $111M
+
+Section 11 — Investment Decision
+Recommendation: No (at the likely valuation) – with conditions. Axenya has an intriguing model at the intersection of corporate benefits, AI health management, and insurance brokerage, addressing a real pain point (skyrocketing health costs with 25% of Brazilians in private plans). However, our analysis indicates that unless we can invest at a quite low valuation, the risk-adjusted return may not clear our hurdle.
+
+Investment range: We would invest at ≤ ~$15M post-money valuation; we would pass at > ~$40M post-money.
+
+Key sensitivity: The biggest swing factor is Axenya's demonstrated ability to scale its cost-saving outcomes. If Axenya can prove that its model consistently yields substantially lower claims inflation, our confidence in the bull/moonshot scenarios would rise.
+
+Conviction level: Medium. We have moderate conviction in this analysis – we are confident about the broad market opportunity but the uncertainties are significant: execution risks in emerging markets, the need to influence entrenched insurers, and competition from well-funded local peers all temper our enthusiasm.`
+
   // Mock analysis - in real implementation this would call OpenAI APIs
-  const runAnalysis = async (data: { companyName: string; targetValuation: string; file: File }) => {
+  const runAnalysis = async (data: { 
+    companyName: string; 
+    targetValuation: string; 
+    file: File;
+    prompts: {
+      skeptical: string
+      contrarian: string
+      optimistic: string
+      cfo: string
+    }
+  }) => {
     setCurrentAnalysis(data)
     setIsAnalyzing(true)
     
@@ -38,6 +87,7 @@ const Index = () => {
           moonshot: { probability: 5, value: "$1B" }
         },
         weightedValuation: "$140M",
+        fullAnalysis: mockFullAnalysis,
         status: "pending"
       },
       {
@@ -54,6 +104,7 @@ const Index = () => {
           moonshot: { probability: 5, value: "$1.2B" }
         },
         weightedValuation: "$190M",
+        fullAnalysis: mockFullAnalysis.replace("Recommendation: No", "Recommendation: Yes").replace("Skeptical", "Contrarian"),
         status: "pending"
       },
       {
@@ -70,6 +121,7 @@ const Index = () => {
           moonshot: { probability: 10, value: "$2B" }
         },
         weightedValuation: "$340M",
+        fullAnalysis: mockFullAnalysis.replace("Recommendation: No", "Recommendation: Strong Yes").replace("Skeptical", "Optimistic"),
         status: "pending"
       },
       {
@@ -86,6 +138,7 @@ const Index = () => {
           moonshot: { probability: 4, value: "$900M" }
         },
         weightedValuation: "$165M",
+        fullAnalysis: mockFullAnalysis.replace("Recommendation: No", "Recommendation: Yes").replace("Skeptical", "CFO"),
         status: "pending"
       }
     ]

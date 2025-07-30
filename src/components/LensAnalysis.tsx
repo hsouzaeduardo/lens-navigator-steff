@@ -1,7 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle2, Clock, AlertTriangle, TrendingDown, TrendingUp, DollarSign, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { CheckCircle2, Clock, AlertTriangle, TrendingDown, TrendingUp, DollarSign, Users, FileText } from "lucide-react"
 
 export interface LensResult {
   lens: "Skeptical" | "Contrarian" | "Optimistic" | "CFO"
@@ -17,6 +20,7 @@ export interface LensResult {
     moonshot: { probability: number; value: string }
   }
   weightedValuation: string
+  fullAnalysis?: string // Full detailed analysis output
   status: "completed" | "running" | "pending"
 }
 
@@ -151,6 +155,34 @@ export function LensAnalysis({ results, isLoading }: LensAnalysisProps) {
                       {result.keySensitivity}
                     </div>
                   </div>
+                  
+                  {result.fullAnalysis && (
+                    <div className="pt-3 border-t border-border">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="w-full">
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Full Analysis
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh]">
+                          <DialogHeader>
+                            <DialogTitle>{result.lens} Lens - Full Analysis</DialogTitle>
+                            <DialogDescription>
+                              Complete detailed analysis from the {result.lens.toLowerCase()} perspective
+                            </DialogDescription>
+                          </DialogHeader>
+                          <ScrollArea className="max-h-[60vh] pr-6">
+                            <div className="prose prose-sm max-w-none">
+                              <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                                {result.fullAnalysis}
+                              </pre>
+                            </div>
+                          </ScrollArea>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
                 </CardContent>
               )}
             </Card>

@@ -11,7 +11,7 @@ const Index = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<{
     companyName: string
     targetValuation?: string
-    file: File
+    files: File[]
     prompts: {
       skeptical: string
       contrarian: string
@@ -60,7 +60,7 @@ Conviction level: Medium. We have moderate conviction in this analysis – we ar
   const runAnalysis = async (data: { 
     companyName: string; 
     targetValuation: string; 
-    file: File;
+    files: File[];
     prompts: {
       skeptical: string
       contrarian: string

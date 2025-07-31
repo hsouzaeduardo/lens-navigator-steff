@@ -12,7 +12,7 @@ interface AnalysisFormProps {
   onSubmit: (data: {
     companyName: string
     targetValuation: string
-    file: File
+    files: File[]
     prompts: {
       skeptical: string
       contrarian: string
@@ -100,22 +100,26 @@ You are an independent AI Investment Analyst for a Latin America-focused early-s
 export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps) {
   const [companyName, setCompanyName] = useState("")
   const [targetValuation, setTargetValuation] = useState("")
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [prompts, setPrompts] = useState(defaultPrompts)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!companyName || !uploadedFile) return
+    if (!companyName || uploadedFiles.length === 0) return
     
     onSubmit({
       companyName,
       targetValuation,
-      file: uploadedFile,
+      files: uploadedFiles,
       prompts
     })
   }
 
-  const isFormValid = companyName.trim() && uploadedFile
+  const handleFileRemove = (index: number) => {
+    setUploadedFiles(files => files.filter((_, i) => i !== index))
+  }
+
+  const isFormValid = companyName.trim() && uploadedFiles.length > 0
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg">
@@ -182,11 +186,12 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
               <div className="space-y-2">
                 <Label>Supporting Materials *</Label>
                 <FileUpload
-                  onFileUpload={setUploadedFile}
-                  onFileRemove={() => setUploadedFile(null)}
-                  uploadedFile={uploadedFile}
+                  onFileUpload={setUploadedFiles}
+                  onFileRemove={handleFileRemove}
+                  uploadedFiles={uploadedFiles}
                   isUploading={isLoading}
                   maxSize={25}
+                  maxFiles={20}
                 />
               </div>
               

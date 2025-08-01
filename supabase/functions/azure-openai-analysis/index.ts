@@ -16,10 +16,10 @@ async function callAzureOpenAI(prompt: string, companyName: string): Promise<any
   const endpoint = 'https://oai-canarynho-brsouth-dev-001.openai.azure.com'
   const deployment = 'gpt-4o-mini'
   const apiVersion = '2025-01-01-preview'
-  const api_key = Deno.env.get('AZURE_OPENAI_API_KEY')
+  const api_key = '4yFNLK4bxi0ATZibAZzxKodlMU4cgVn9YoX93oEHltWongBtSh4vJQQJ99BHACYeBjFXJ3w3AAABACOGgUMa'
   
-  if (!endpoint || !api_key) {
-    throw new Error('Missing Azure OpenAI endpoint or API key')
+  if (!endpoint) {
+    throw new Error('Missing Azure OpenAI endpoint')
   }
 
   const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`

@@ -52,9 +52,10 @@ async function getAzureAccessToken(): Promise<string> {
 }
 
 async function callAzureOpenAI(accessToken: string, prompt: string, companyName: string): Promise<any> {
-  const endpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT')
-  const deployment = Deno.env.get('AZURE_OPENAI_DEPLOYMENT') || 'gpt-4o-mini'
+  const endpoint = 'https://oai-canarynho-brsouth-dev-001.openai.azure.com'
+  const deployment = 'gpt-4o-mini'
   const apiVersion = '2025-01-01-preview'
+  const api_key = '4yFNLK4bxi0ATZibAZzxKodlMU4cgVn9YoX93oEHltWongBtSh4vJQQJ99BHACYeBjFXJ3w3AAABACOGgUMa'
   
   if (!endpoint) {
     throw new Error('Missing Azure OpenAI endpoint')
@@ -92,7 +93,7 @@ async function callAzureOpenAI(accessToken: string, prompt: string, companyName:
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
+      'api-key': `${api_key}`,
     },
     body: JSON.stringify(payload),
   })

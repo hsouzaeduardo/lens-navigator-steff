@@ -12,53 +12,14 @@ interface AnalysisRequest {
   files?: string[] // Base64 encoded files or file content
 }
 
-interface AzureTokenResponse {
-  access_token: string
-  token_type: string
-  expires_in: number
-}
-
-async function getAzureAccessToken(): Promise<string> {
-  const tenantId = Deno.env.get('AZURE_TENANT_ID')
-  const clientId = Deno.env.get('AZURE_CLIENT_ID')
-  const clientSecret = Deno.env.get('AZURE_CLIENT_SECRET')
-  
-  if (!tenantId || !clientId || !clientSecret) {
-    throw new Error('Missing Azure credentials')
-  }
-
-  const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`
-  
-  const formData = new URLSearchParams()
-  formData.append('client_id', clientId)
-  formData.append('scope', 'https://management.azure.com/.default')
-  formData.append('client_secret', clientSecret)
-  formData.append('grant_type', 'client_credentials')
-
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: formData,
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to get access token: ${response.statusText}`)
-  }
-
-  const tokenData: AzureTokenResponse = await response.json()
-  return tokenData.access_token
-}
-
-async function callAzureOpenAI(accessToken: string, prompt: string, companyName: string): Promise<any> {
+async function callAzureOpenAI(prompt: string, companyName: string): Promise<any> {
   const endpoint = 'https://oai-canarynho-brsouth-dev-001.openai.azure.com'
   const deployment = 'gpt-4o-mini'
   const apiVersion = '2025-01-01-preview'
-  const api_key = '4yFNLK4bxi0ATZibAZzxKodlMU4cgVn9YoX93oEHltWongBtSh4vJQQJ99BHACYeBjFXJ3w3AAABACOGgUMa'
+  const api_key = Deno.env.get('AZURE_OPENAI_API_KEY')
   
-  if (!endpoint) {
-    throw new Error('Missing Azure OpenAI endpoint')
+  if (!endpoint || !api_key) {
+    throw new Error('Missing Azure OpenAI endpoint or API key')
   }
 
   const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`
@@ -113,11 +74,8 @@ serve(async (req) => {
   try {
     const { companyName, lens, prompt, files }: AnalysisRequest = await req.json()
 
-    // Get Azure access token
-    const accessToken = await getAzureAccessToken()
-
     // Call Azure OpenAI
-    const result = await callAzureOpenAI(accessToken, prompt, companyName)
+    const result = await callAzureOpenAI(prompt, companyName)
 
     return new Response(
       JSON.stringify({

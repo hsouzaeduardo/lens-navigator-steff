@@ -56,7 +56,7 @@ Key sensitivity: The biggest swing factor is Axenya's demonstrated ability to sc
 
 Conviction level: Medium. We have moderate conviction in this analysis – we are confident about the broad market opportunity but the uncertainties are significant: execution risks in emerging markets, the need to influence entrenched insurers, and competition from well-funded local peers all temper our enthusiasm.`
 
-  // Mock analysis - in real implementation this would call OpenAI APIs
+  // Real Azure OpenAI analysis implementation
   const runAnalysis = async (data: { 
     companyName: string; 
     targetValuation: string; 
@@ -145,28 +145,67 @@ Conviction level: Medium. We have moderate conviction in this analysis – we ar
     
     setLensResults(initialResults)
 
-    // Simulate running each lens with delays
-    for (let i = 0; i < initialResults.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000))
+    // Run actual Azure OpenAI analysis for each lens
+    const lenses = [
+      { key: 'skeptical', name: 'Skeptical', prompt: data.prompts.skeptical },
+      { key: 'contrarian', name: 'Contrarian', prompt: data.prompts.contrarian },
+      { key: 'optimistic', name: 'Optimistic', prompt: data.prompts.optimistic },
+      { key: 'cfo', name: 'CFO', prompt: data.prompts.cfo }
+    ]
+
+    for (let i = 0; i < lenses.length; i++) {
+      const lens = lenses[i]
       
       setLensResults(prev => prev.map((result, index) => 
         index === i 
           ? { ...result, status: "running" }
           : result
       ))
-      
-      await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000))
-      
-      setLensResults(prev => prev.map((result, index) => 
-        index === i 
-          ? { ...result, status: "completed" }
-          : result
-      ))
-      
-      toast({
-        title: `${initialResults[i].lens} Analysis Complete`,
-        description: `Recommendation: ${initialResults[i].recommendation}`
-      })
+
+      try {
+        const response = await fetch('/functions/v1/azure-openai-analysis', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            companyName: data.companyName,
+            lens: lens.name,
+            prompt: lens.prompt,
+            files: data.files.map(f => f.name) // In a real implementation, you'd process file content
+          })
+        })
+
+        const result = await response.json()
+        
+        if (result.success) {
+          setLensResults(prev => prev.map((lensResult, index) => 
+            index === i 
+              ? { ...lensResult, status: "completed", fullAnalysis: result.analysis }
+              : lensResult
+          ))
+          
+          toast({
+            title: `${lens.name} Analysis Complete`,
+            description: `Analysis generated successfully`
+          })
+        } else {
+          throw new Error(result.error)
+        }
+      } catch (error) {
+        console.error(`Error analyzing ${lens.name}:`, error)
+        setLensResults(prev => prev.map((lensResult, index) => 
+          index === i 
+            ? { ...lensResult, status: "completed", fullAnalysis: `Error: ${error.message}` }
+            : lensResult
+        ))
+        
+        toast({
+          title: `${lens.name} Analysis Failed`,
+          description: `Error: ${error.message}`,
+          variant: "destructive"
+        })
+      }
     }
     
     setIsAnalyzing(false)

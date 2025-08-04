@@ -1,0 +1,64 @@
+# Arquivos do Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+
+# Arquivos de backup
+*.backup
+*.bak
+
+# Arquivos de lock
+.terraform.lock.hcl
+
+# Diretório .terraform
+.terraform/
+
+# Arquivos de plan
+*.tfplan
+tfplan
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Arquivos de configuração local
+.terraformrc
+terraform.rc
+
+# Arquivos de credenciais
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.production
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de output sensíveis
+outputs.tf
+!outputs.tf.example
+
+# Arquivos de secrets
+secrets.tf
+secrets.tfvars
+
+# Arquivos de backup do Azure
+*.backup
+*.bak 

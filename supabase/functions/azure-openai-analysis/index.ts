@@ -35,15 +35,23 @@ async function callAzureOpenAI(prompt: string, companyName: string): Promise<any
           }
         ]
       },
-      {
-        role: "user", 
-        content: [
-          {
-            type: "text",
-            text: `Please analyze ${companyName} according to the instructions provided.`
-          }
-        ]
-      }
+              {
+          role: "user", 
+          content: [
+            {
+              type: "text",
+              text: `Please analyze ${companyName} according to the instructions provided. Return a comprehensive investment analysis with the following structure:
+
+1. **Investment Recommendation**: Clear Yes/No decision with conviction level
+2. **Entry Range**: Specific valuation ranges for investment decision
+3. **Key Sensitivity**: Main factor that could change the recommendation
+4. **Valuation Scenarios**: 5 scenarios (Write-Off, Bear, Base, Bull, Moonshot) with probabilities and values
+5. **Detailed Analysis**: Comprehensive reasoning behind the recommendation
+
+Format the response in HTML format.`
+            }
+          ]
+        }
     ],
     temperature: 0.7,
     top_p: 0.95,
@@ -72,7 +80,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔍 BREAKPOINT: Iniciando análise Azure OpenAI')
     const { companyName, lens, prompt, files }: AnalysisRequest = await req.json()
+    console.log('📊 Dados recebidos:', { companyName, lens, prompt: prompt.substring(0, 100) + '...' })
 
     // Call Azure OpenAI
     const result = await callAzureOpenAI(prompt, companyName)

@@ -1,9 +1,13 @@
+import { useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Download, Share, FileText, Target, Lightbulb, CheckSquare } from "lucide-react"
+import { Download, Share, FileText, Target, Lightbulb, CheckSquare, Loader2 } from "lucide-react"
 import { LensResult } from "./LensAnalysis"
+import { exportToPDF, exportToPDFFromElement } from "@/lib/pdf-export"
+import { toast } from "@/hooks/use-toast"
+import { PDFPreview } from "./PDFPreview"
 
 interface ICReportProps {
   companyName: string
@@ -28,6 +32,8 @@ const convictionColors = {
 
 export function ICReport({ companyName, targetValuation, results, consensusSensitivity, actionItem }: ICReportProps) {
   const completedResults = results.filter(r => r.status === "completed")
+  const [isExporting, setIsExporting] = useState(false)
+  const reportRef = useRef<HTMLDivElement>(null)
   
   if (completedResults.length === 0) {
     return null
@@ -51,8 +57,61 @@ ${table}
 📁 [View full report] | [Open Notion entry]`
   }
 
+  const handleExportPDF = async () => {
+    setIsExporting(true)
+    
+    try {
+      // Preparar dados para exportação
+      const exportData = {
+        companyName,
+        targetValuation,
+        results: completedResults,
+        consensusSensitivity,
+        actionItem,
+        date: new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      }
+
+      // Tentar exportação programática primeiro
+      await exportToPDF(exportData, reportRef.current)
+      
+      toast({
+        title: "PDF Exportado",
+        description: "Relatório salvo com sucesso!",
+      })
+      
+    } catch (error) {
+      console.error('Erro na exportação programática, tentando captura visual:', error)
+      
+      try {
+        // Fallback para captura visual
+        const fileName = `IC_Report_${companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+        await exportToPDFFromElement(reportRef.current, fileName)
+        
+        toast({
+          title: "PDF Exportado",
+          description: "Relatório salvo com sucesso!",
+        })
+        
+      } catch (fallbackError) {
+        console.error('Erro na exportação:', fallbackError)
+        toast({
+          title: "Erro na Exportação",
+          description: "Não foi possível gerar o PDF. Tente novamente.",
+          variant: "destructive"
+        })
+      }
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
-    <Card className="w-full max-w-4xl mx-auto shadow-lg border-primary/20">
+    <div ref={reportRef}>
+      <Card className="w-full max-w-4xl mx-auto shadow-lg border-primary/20">
       <CardHeader className="bg-gradient-primary text-primary-foreground">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -71,9 +130,19 @@ ${table}
               <Share className="w-4 h-4 mr-2" />
               Share
             </Button>
-            <Button variant="secondary" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              <Download className="w-4 h-4 mr-2" />
-              Export
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleExportPDF}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              {isExporting ? 'Exporting...' : 'Export'}
             </Button>
           </div>
         </div>
@@ -164,5 +233,19 @@ ${table}
         </div>
       </CardContent>
     </Card>
+
+    {/* PDF Preview Component */}
+    <div className="mt-6">
+      <PDFPreview
+        companyName={companyName}
+        targetValuation={targetValuation}
+        results={results}
+        consensusSensitivity={consensusSensitivity}
+        actionItem={actionItem}
+        onExport={handleExportPDF}
+        isExporting={isExporting}
+      />
+    </div>
+    </div>
   )
 }

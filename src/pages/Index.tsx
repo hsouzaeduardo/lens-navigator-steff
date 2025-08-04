@@ -3,9 +3,13 @@ import { AnalysisForm } from "@/components/AnalysisForm"
 import { LensAnalysis, LensResult } from "@/components/LensAnalysis"
 import { ICReport } from "@/components/ICReport"
 import { FundMetrics } from "@/components/FundMetrics"
+import { SimpleAnalysis } from "@/components/SimpleAnalysis"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Brain, Target, TrendingUp } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { useAzureOpenAI } from '@/hooks/use-azure-openai'
+import { FUNCTION_URLS } from '@/lib/config'
+import { callAzureOpenAI } from '@/lib/azure-openai'
 
 const Index = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<{
@@ -163,20 +167,23 @@ Conviction level: Medium. We have moderate conviction in this analysis – we ar
       ))
 
       try {
-        const response = await fetch('/functions/v1/azure-openai-analysis', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            companyName: data.companyName,
-            lens: lens.name,
-            prompt: lens.prompt,
-            files: data.files.map(f => f.name) // In a real implementation, you'd process file content
-          })
+        debugger; // BREAKPOINT AQUI - Remove quando não precisar mais
+        
+        console.log('🚀 Iniciando chamada para Azure OpenAI:', {
+          companyName: data.companyName,
+          lens: lens.name,
+          promptLength: lens.prompt.length,
+          filesCount: data.files.length
+        })
+        
+        const result = await callAzureOpenAI({
+          companyName: data.companyName,
+          lens: lens.name,
+          prompt: lens.prompt + 'IMPORTANT: Format the response in HTML format.',
+          files: data.files.map(f => f.name)
         })
 
-        const result = await response.json()
+        console.log('✅ Resultado processado:', { success: result.success, hasAnalysis: !!result.analysis })
         
         if (result.success) {
           setLensResults(prev => prev.map((lensResult, index) => 

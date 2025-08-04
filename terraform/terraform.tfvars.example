@@ -1,0 +1,165 @@
+# 🎯 Arquivo de exemplo para variáveis do Terraform
+# Copie este arquivo para terraform.tfvars e ajuste os valores
+
+# =============================================================================
+# CONFIGURAÇÕES PRINCIPAIS
+# =============================================================================
+
+# Nome do Resource Group
+resource_group_name = "rg-agent-ai"
+
+# Localização dos recursos (região do Azure)
+location = "Brazil South"
+
+# Ambiente (dev, staging, prod)
+environment = "dev"
+
+# =============================================================================
+# CONFIGURAÇÕES DE REDE
+# =============================================================================
+
+# Address space da Virtual Network
+vnet_address_space = "10.0.0.0/16"
+
+# Número de nós do AKS
+aks_node_count = 3
+
+# Tamanho da VM dos nós do AKS
+aks_vm_size = "Standard_D2s_v3"
+
+# =============================================================================
+# CONFIGURAÇÕES DE APLICAÇÃO
+# =============================================================================
+
+# Número de réplicas dos deployments
+app_replicas = {
+  process_app = 2
+  chat_api    = 3
+  agent_chat  = 2
+  tools       = 1
+}
+
+# Registry dos containers (substitua pelo seu)
+container_registry = "your-registry.azurecr.io"
+
+# Tags dos containers
+container_tags = {
+  process_app = "latest"
+  chat_api    = "latest"
+  agent_chat  = "latest"
+  tools       = "latest"
+}
+
+# =============================================================================
+# CONFIGURAÇÕES DE MONITORAMENTO
+# =============================================================================
+
+# Habilitar monitoramento
+enable_monitoring = true
+
+# Dias de retenção dos logs
+log_retention_days = 30
+
+# =============================================================================
+# CONFIGURAÇÕES DE ESCALABILIDADE
+# =============================================================================
+
+# Habilitar KEDA
+keda_enabled = true
+
+# Configuração de escalabilidade
+scaling_config = {
+  min_replicas = 1
+  max_replicas = 10
+  cpu_threshold = 70
+  memory_threshold = 80
+}
+
+# =============================================================================
+# CONFIGURAÇÕES DE SEGURANÇA
+# =============================================================================
+
+# Habilitar Private Endpoints
+enable_private_endpoints = false
+
+# Habilitar Network Policies
+enable_network_policies = true
+
+# =============================================================================
+# CONFIGURAÇÕES DE BACKUP
+# =============================================================================
+
+# Habilitar backup
+enable_backup = true
+
+# Dias de retenção do backup
+backup_retention_days = 7
+
+# =============================================================================
+# CONFIGURAÇÕES DE CUSTO
+# =============================================================================
+
+# Centro de custo
+cost_center = "AI-Agent"
+
+# Nome do projeto
+project_name = "AI-Agent-System"
+
+# =============================================================================
+# CONFIGURAÇÕES AVANÇADAS (PRODUÇÃO)
+# =============================================================================
+
+# Para ambiente de produção, descomente e ajuste:
+
+# environment = "prod"
+# location = "East US"
+# aks_node_count = 5
+# aks_vm_size = "Standard_D4s_v3"
+
+# app_replicas = {
+#   process_app = 3
+#   chat_api    = 5
+#   agent_chat  = 3
+#   tools       = 2
+# }
+
+# scaling_config = {
+#   min_replicas = 2
+#   max_replicas = 20
+#   cpu_threshold = 60
+#   memory_threshold = 70
+# }
+
+# enable_private_endpoints = true
+# enable_backup = true
+# backup_retention_days = 30
+# log_retention_days = 90
+
+# =============================================================================
+# CONFIGURAÇÕES DE DESENVOLVIMENTO
+# =============================================================================
+
+# Para ambiente de desenvolvimento, use:
+
+# environment = "dev"
+# location = "Brazil South"
+# aks_node_count = 1
+# aks_vm_size = "Standard_B2s"
+
+# app_replicas = {
+#   process_app = 1
+#   chat_api    = 1
+#   agent_chat  = 1
+#   tools       = 1
+# }
+
+# scaling_config = {
+#   min_replicas = 1
+#   max_replicas = 3
+#   cpu_threshold = 80
+#   memory_threshold = 90
+# }
+
+# enable_monitoring = false
+# enable_backup = false
+# log_retention_days = 7 

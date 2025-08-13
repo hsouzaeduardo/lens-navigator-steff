@@ -10,9 +10,10 @@ interface AnalysisRequest {
   lens: string
   prompt: string
   files?: string[] // Base64 encoded files or file content
+  documentContent?: string
 }
 
-async function callAzureOpenAI(prompt: string, companyName: string): Promise<any> {
+async function callAzureOpenAI(prompt: string, companyName: string, lens: string): Promise<any> {
   const endpoint = 'https://oai-canarynho-brsouth-dev-001.openai.azure.com'
   const deployment = 'gpt-4o-mini'
   const apiVersion = '2025-01-01-preview'
@@ -35,23 +36,59 @@ async function callAzureOpenAI(prompt: string, companyName: string): Promise<any
           }
         ]
       },
-              {
-          role: "user", 
-          content: [
-            {
-              type: "text",
-              text: `Please analyze ${companyName} according to the instructions provided. Return a comprehensive investment analysis with the following structure:
+      {
+        role: "user", 
+        content: [
+          {
+            type: "text",
+            text: `Please analyze ${companyName} using the ${lens} lens according to the instructions provided. 
 
-1. **Investment Recommendation**: Clear Yes/No decision with conviction level
-2. **Entry Range**: Specific valuation ranges for investment decision
-3. **Key Sensitivity**: Main factor that could change the recommendation
-4. **Valuation Scenarios**: 5 scenarios (Write-Off, Bear, Base, Bull, Moonshot) with probabilities and values
-5. **Detailed Analysis**: Comprehensive reasoning behind the recommendation
+IMPORTANT: You must return ONLY valid JSON that matches this exact structure - no other text, no HTML, no markdown:
 
-Format the response in HTML format.`
-            }
-          ]
-        }
+{
+  "lens": "${lens}",
+  "recommendation": "Yes/No/Strong Yes/Strong No",
+  "entryRange": "$X - $Y",
+  "conviction": "Low/Medium/High",
+  "keySensitivity": "Description of main factor",
+  "scenarios": {
+    "writeOff": {
+      "probability": 15,
+      "value": "$0",
+      "probabilityCalculation": "Detailed reasoning for this probability",
+      "riskFactorAnalysis": "Risk analysis for this scenario",
+      "valuationMethod": "How valuation was calculated",
+      "comparableCompanies": "Market comparables analysis",
+      "calculationSteps": "Step-by-step calculation",
+      "operationalConditions": "Operational factors",
+      "validationMetrics": "Validation metrics",
+      "riskFactorQuantification": "Quantified risk factors",
+      "earlyWarningIndicators": "Early warning signs"
+    },
+    "bear": { /* same structure as writeOff */ },
+    "base": { /* same structure as writeOff */ },
+    "bull": { /* same structure as writeOff */ },
+    "moonshot": { /* same structure as writeOff */ }
+  },
+  "weightedValuation": "$XM",
+  "wvtReasoning": "Reasoning behind WVT",
+  "wvtCalculation": "WVT calculation steps",
+  "wvtAdjustments": "Adjustments made to WVT",
+  "industryComparison": "Industry positioning",
+  "entryPriceBands": {
+    "strongYes": "$X",
+    "yes": "$Y",
+    "no": "$Z",
+    "strongNo": "$W+"
+  },
+  "fundLogic": "Investment logic for this lens",
+  "status": "completed"
+}
+
+Ensure all probabilities sum to 100% and provide realistic valuations based on the ${lens} perspective.`
+          }
+        ]
+      }
     ],
     temperature: 0.7,
     top_p: 0.95,
@@ -85,13 +122,38 @@ serve(async (req) => {
     console.log('📊 Dados recebidos:', { companyName, lens, prompt: prompt.substring(0, 100) + '...' })
 
     // Call Azure OpenAI
-    const result = await callAzureOpenAI(prompt, companyName)
+    const result = await callAzureOpenAI(prompt, companyName, lens)
+    
+    // Extract the content from the LLM response
+    const llmContent = result.choices[0]?.message?.content || ''
+    
+    // Try to parse the JSON response
+    let parsedResult
+    try {
+      parsedResult = JSON.parse(llmContent)
+    } catch (parseError) {
+      console.error('Failed to parse LLM response as JSON:', parseError)
+      console.log('Raw LLM response:', llmContent)
+      
+      // Return error if we can't parse the response
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'LLM returned invalid JSON format',
+          rawResponse: llmContent
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        },
+      )
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         lens,
-        analysis: result.choices[0]?.message?.content || '',
+        result: parsedResult,
         usage: result.usage
       }),
       {

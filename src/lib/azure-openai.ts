@@ -11,6 +11,7 @@ interface AnalysisRequest {
   lens: string
   prompt: string
   files?: string[]
+  documentContent?: string
 }
 
 interface AnalysisResponse {

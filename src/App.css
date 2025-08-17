@@ -18,6 +18,17 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+pre {
+  white-space: pre-wrap;       /* mantém formatação, mas permite quebrar linha */
+  word-wrap: break-word;       /* quebra palavras longas */
+  overflow-wrap: anywhere;     /* quebra onde precisar */
+  tab-size: 2;                 /* melhora identação visual */
+}
+code, pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.35;
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

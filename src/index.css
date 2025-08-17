@@ -91,6 +91,8 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -138,4 +140,37 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    tab-size: 2;
+  }
+  code,
+  pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+    line-height: 1.35;
+  }
 }
+
+@page { size: A4; margin: 20mm; }
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+  line-height: 1.35;
+}
+
+/* Forçar boas cores em impressão */
+@media print {
+  .prose { color: #000 !important; background: #fff !important; }
+}
+
+

@@ -75,6 +75,14 @@ ${table}
         })
       }
 
+      // Fallback para captura visual
+        // const fileName = `IC_Report_${companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+        // await exportToPDFFromElement(reportRef.current, fileName)
+        
+        // toast({
+        //   title: "PDF Exportado",
+        //   description: "Relatório salvo com sucesso!",
+        // })
       // Tentar exportação programática primeiro
       await exportToPDF(exportData, reportRef.current)
       

@@ -1,5 +1,4 @@
 import * as pdfjsLib from 'pdfjs-dist'
-import mammoth from 'mammoth'
 import * as XLSX from 'xlsx'
 
 // Configure PDF.js worker
@@ -418,13 +417,15 @@ export class DocumentProcessor {
   private static async extractDOCXMetadata(file: File): Promise<Partial<DocumentMetadata>> {
     try {
       const arrayBuffer = await file.arrayBuffer()
+      const mammoth = await import('mammoth')
       const result = await mammoth.extractRawText({ arrayBuffer })
-      
+      const text = (result && (result as any).value) || ''
+
       // Basic metadata extraction for DOCX
       return {
-        hasImages: result.value.includes('[Image]') || result.value.includes('[Picture]'),
-        hasTables: result.value.includes('[Table]'),
-        hasCharts: result.value.includes('[Chart]')
+        hasImages: text.includes('[Image]') || text.includes('[Picture]'),
+        hasTables: text.includes('[Table]'),
+        hasCharts: text.includes('[Chart]')
       }
     } catch (error) {
       return {}
@@ -494,8 +495,9 @@ export class DocumentProcessor {
    */
   private static async extractDOCXText(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer()
+    const mammoth = await import('mammoth')
     const result = await mammoth.extractRawText({ arrayBuffer })
-    return result.value
+    return ((result && (result as any).value) || '').toString()
   }
 
   /**

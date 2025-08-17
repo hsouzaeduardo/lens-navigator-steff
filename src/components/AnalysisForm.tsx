@@ -6,9 +6,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { FileUpload } from "@/components/ui/file-upload"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Briefcase, DollarSign, TrendingUp, Settings, FileText, AlertCircle } from "lucide-react"
+import { Briefcase, DollarSign, TrendingUp, Settings } from "lucide-react"
 import { DocumentProcessor, ProcessedDocument } from "@/lib/document-processor"
-import { DocumentPreview } from "./DocumentPreview"
+// Remova ou ajuste esta linha:
+// import { DocumentPreview } from "./DocumentPreview"
+// Ela não é utilizada no componente AnalysisForm.
+// Se precisar usar DocumentPreview, adicione onde for necessário no JSX.
+// Caso contrário, apenas remova a importação para evitar warnings/erros.
 
 interface AnalysisFormProps {
   onSubmit: (data: {
@@ -248,7 +252,9 @@ One non-obvious insight about this opportunity (25 words max)
 
 🔔 Output Requirement: You must only output Sections 10, 11, and 12, with full detail as described. Omit all other sections in your final response.
 
-Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that drive your analysis.`,
+Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that drive your analysis.
+IMPORTANT: RESULT NEED BE IN HTML FORMAT, WITH TABLES FORMATTED AS HTML TABLES.
+`,
 
   contrarian: `# Investment Analysis Prompt - Contrarian Board Member
 
@@ -471,7 +477,9 @@ One non-obvious insight about this opportunity (25 words max)
 
 🔔 Output Requirement: You must only output Sections 10, 11, and 12, with full detail as described. Omit all other sections in your final response.
 
-Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that others are missing.`,
+Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that others are missing.
+IMPORTANT: RESULT NEED BE IN HTML FORMAT, WITH TABLES FORMATTED AS HTML TABLES.
+`,
 
   optimistic: `# Investment Analysis Prompt - Optimistic Board Member
 
@@ -694,7 +702,9 @@ One non-obvious insight about this opportunity (25 words max)
 
 🔔 Output Requirement: You must only output Sections 10, 11, and 12, with full detail as described. Omit all other sections in your final response.
 
-Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that support growth potential.`,
+Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that support growth potential.
+IMPORTANT: RESULT NEED BE IN HTML FORMAT, WITH TABLES FORMATTED AS HTML TABLES.
+`,
 
   cfo: `# Investment Analysis Prompt - CFO Board Member
 
@@ -917,7 +927,9 @@ One non-obvious insight about this opportunity (25 words max)
 
 🔔 Output Requirement: You must only output Sections 10, 11, and 12, with full detail as described. Omit all other sections in your final response.
 
-Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that support sustainable business value.`
+Remember: You're investing fund LPs' money. Be rigorous. Focus on the QUALITATIVE story and market dynamics that support sustainable business value.
+IMPORTANT: RESULT NEED BE IN HTML FORMAT, WITH TABLES FORMATTED AS HTML TABLES.
+`
 }
 
 export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps) {
@@ -929,7 +941,7 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
   const [documentProcessingError, setDocumentProcessingError] = useState<string | null>(null)
   const [prompts, setPrompts] = useState(defaultPrompts)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!companyName || uploadedFiles.length === 0) return
     
@@ -956,6 +968,7 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
       setIsProcessingDocuments(false)
     }
   }
+
 
   const handleFileRemove = (index: number) => {
     setUploadedFiles(files => files.filter((_, i) => i !== index))
@@ -1035,54 +1048,16 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
                   maxSize={25}
                   maxFiles={20}
                 />
-                
-                {/* Document Processing Status */}
-                {isProcessingDocuments && (
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-sm text-blue-700">Processing documents...</span>
-                  </div>
-                )}
-                
-                {/* Document Processing Error */}
-                {documentProcessingError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-red-600" />
-                    <span className="text-sm text-red-700">{documentProcessingError}</span>
-                  </div>
-                )}
-                
-                {/* Processed Documents Summary */}
-                {processedDocuments.length > 0 && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-700">
-                        Documents Processed ({processedDocuments.length})
-                      </span>
-                    </div>
-                    <div className="text-xs text-green-600 space-y-1">
-                      {processedDocuments.map((doc, index) => (
-                        <div key={index} className="flex justify-between">
-                          <span>{doc.fileName}</span>
-                          <span>{doc.wordCount} words</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
               
               <div className="pt-4 border-t">
                 <Button
                   type="submit"
-                  disabled={!isFormValid || isLoading || isProcessingDocuments}
+                  disabled={!isFormValid || isLoading}
                   className="w-full bg-gradient-primary shadow-md hover:shadow-lg transition-all duration-300"
                   size="lg"
                 >
-                  {isProcessingDocuments ? "Processing Documents..." : 
-                   isLoading ? "Running Analysis..." : 
-                   "Start 4-Lens Analysis"}
+                  {isLoading ? "Running Analysis..." : "Start 4-Lens Analysis"}
                 </Button>
                 
                 {isFormValid && (
@@ -1144,19 +1119,6 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
                 </div>
               </div>
             </div>
-            
-            {/* Document Preview */}
-            {processedDocuments.length > 0 && (
-              <DocumentPreview 
-                documents={processedDocuments}
-                onRemove={(index) => {
-                  const newDocs = processedDocuments.filter((_, i) => i !== index)
-                  setProcessedDocuments(newDocs)
-                  const newFiles = uploadedFiles.filter((_, i) => i !== index)
-                  setUploadedFiles(newFiles)
-                }}
-              />
-            )}
             
             <div className="flex gap-3 pt-4 border-t">
               <Button 

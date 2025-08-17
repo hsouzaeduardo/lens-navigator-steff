@@ -1,5 +1,15 @@
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import autoTable from 'jspdf-autotable'
+
+// interface ExportData {
+//   companyName: string
+//   targetValuation?: string
+//   results: any[]
+//   consensusSensitivity: string
+//   actionItem: string
+//   date: string
+// }
 
 interface ExportData {
   companyName: string
@@ -10,6 +20,7 @@ interface ExportData {
   date: string
 }
 
+
 export const exportToPDF = async (data: ExportData, elementRef: HTMLElement | null) => {
   if (!elementRef) {
     console.error('Elemento de referência não encontrado')
@@ -17,75 +28,127 @@ export const exportToPDF = async (data: ExportData, elementRef: HTMLElement | nu
   }
 
   try {
-    // Criar PDF
-    const pdf = new jsPDF('p', 'mm', 'a4')
+    // PDF base
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true })
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
     const margin = 20
-    const lineHeight = 8 // Much larger line height to prevent overlap
-    const sectionSpacing = 15 // Spacing between major sections
 
-    // Configurar fonte
-    pdf.setFont('helvetica')
+    // helpers de layout
+    const lineFactor = 1.35
+    pdf.setLineHeightFactor(lineFactor)
+    const mmPerPt = 25.4 / 72
+    const lineHeight = () => pdf.getFontSize() * lineFactor * mmPerPt
+    const ensureSpace = (needed = lineHeight()) => {
+      if (yPosition + needed > pageHeight - margin) {
+        pdf.addPage()
+        yPosition = margin
+      }
+    }
+
+    const drawParagraphs = (raw: string, x = margin + 5, maxW = pageWidth - 2 * margin - 10) => {
+      // limpeza leve de Markdown para evitar sobreposição visual
+      const cleaned = raw
+        .replace(/^#{1,6}\s+/gm, '')       // remove títulos MD
+        .replace(/\*\*(.*?)\*\*/g, '$1')   // **negrito** -> texto
+        .replace(/_(.*?)_/g, '$1')         // _itálico_ -> texto
+        .replace(/`([^`]+)`/g, '$1')       // `code` -> texto
+      const paragraphs = cleaned.split(/\r?\n/)
+
+      for (const p of paragraphs) {
+        const t = p.trim()
+        if (!t) { // linha em branco = espaço de parágrafo
+          yPosition += lineHeight() * 0.6
+          continue
+        }
+        const wrapped = pdf.splitTextToSize(t, maxW)
+        for (const line of wrapped) {
+          ensureSpace()
+          pdf.text(line, x, yPosition)
+          yPosition += lineHeight()
+        }
+        yPosition += lineHeight() * 0.4 // espaçamento entre parágrafos
+      }
+    }
+
+    const tryRenderMarkdownTable = (block: string) => {
+      // detecta linhas com '|' e ignora separadores ---|--- 
+      const lines = block.split(/\r?\n/).map(l => l.trim())
+      const tableLines = lines.filter(l => /\|/.test(l) && !/^[-\s|]+$/.test(l))
+      if (tableLines.length < 2) return false
+
+      const rows = tableLines.map(l => l.split('|').map(c => c.trim()).filter(Boolean))
+      if (!rows.length) return false
+
+      // header opcional: se a primeira linha parece cabeçalho
+      const head = rows[0]
+      const body = rows.slice(1)
+
+      ensureSpace(20)
+      autoTable(pdf, {
+        head: [head],
+        body,
+        startY: yPosition,
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 2 },
+        theme: 'grid'
+      })
+      // @ts-ignore - propriedade adicionada pelo autotable
+      yPosition = (pdf as any).lastAutoTable.finalY + 6
+      return true
+    }
+
+    // Cabeçalho
+    pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(16)
-
-    // Título
     pdf.setFillColor(59, 130, 246) // Blue-500
-    pdf.rect(0, 0, pageWidth, 35, 'F')
+    pdf.rect(0, 0, pageWidth, 30, 'F')
     pdf.setTextColor(255, 255, 255)
-    pdf.text('AI Investment Committee Report', pageWidth / 2, 22, { align: 'center' })
+    pdf.text('AI Investment Committee Report', pageWidth / 2, 20, { align: 'center' })
 
-    // Informações da empresa
-    let yPosition = 55
+    // Info da empresa
     pdf.setFontSize(14)
     pdf.setTextColor(0, 0, 0)
-    pdf.text(`Company: ${data.companyName}`, margin, yPosition)
-    
-    yPosition += lineHeight + 4
-    if (data.targetValuation) {
-      pdf.text(`Target Valuation: ${data.targetValuation}`, margin, yPosition)
-      yPosition += lineHeight + 4
-    }
-    pdf.text(`Date: ${data.date}`, margin, yPosition)
-    yPosition += lineHeight + sectionSpacing
+    pdf.text(`Company: ${data.companyName}`, margin, 45)
+    if (data.targetValuation) pdf.text(`Target Valuation: ${data.targetValuation}`, margin, 55)
+    pdf.text(`Date: ${data.date}`, margin, 65)
 
     // Resumo das lentes
     pdf.setFontSize(12)
     pdf.setFillColor(243, 244, 246) // Gray-100
-    const lensBoxHeight = (data.results.length * (lineHeight + 4)) + 20
-    pdf.rect(margin, yPosition, pageWidth - 2 * margin, lensBoxHeight, 'F')
-    
-    yPosition += 15
+    pdf.rect(margin, 75, pageWidth - 2 * margin, 40, 'F')
+
+    let yPosition = 85
     pdf.setFontSize(11)
     pdf.setTextColor(0, 0, 0)
-    
-    data.results.forEach((result, index) => {
+
+    data.results.forEach((result) => {
       const x = margin + 5
-      const recommendationColor = result.recommendation.includes('Yes') ? [34, 197, 94] : [239, 68, 68] // Green or Red
-      
-      pdf.setTextColor(recommendationColor[0], recommendationColor[1], recommendationColor[2])
+      const isYes = (result.recommendation || '').toLowerCase().includes('yes')
+      const color = isYes ? [34, 197, 94] : [239, 68, 68]
+      pdf.setTextColor(color[0], color[1], color[2])
       pdf.text(`${result.lens}: ${result.recommendation}`, x, yPosition)
-      
+
       pdf.setTextColor(0, 0, 0)
       pdf.setFontSize(9)
-      pdf.text(`Entry Range: ${result.entryRange}`, x + 50, yPosition)
-      pdf.text(`Conviction: ${result.conviction}`, x + 120, yPosition)
-      
-      yPosition += lineHeight + 4
+      if (result.entryRange) pdf.text(`Entry Range: ${result.entryRange}`, x + 50, yPosition)
+      if (result.conviction) pdf.text(`Conviction: ${result.conviction}`, x + 120, yPosition)
+
+      yPosition += 8
       pdf.setFontSize(11)
     })
 
     // Cenários de valuation
-    yPosition += sectionSpacing
+    yPosition += 10
     pdf.setFontSize(12)
     pdf.setTextColor(0, 0, 0)
     pdf.text('Valuation Scenarios:', margin, yPosition)
-    
-    yPosition += lineHeight + 8
+
+    yPosition += 8
     pdf.setFontSize(10)
-    
-    const scenarios = ['Write-Off', 'Bear', 'Base', 'Bull', 'Moonshot']
-    const scenarioColors = [
+
+    const scenarios = ['Write-Off', 'Bear', 'Base', 'Bull', 'Moonshot'] as const
+    const scenarioColors: Array<[number, number, number]> = [
       [239, 68, 68],   // Red
       [245, 158, 11],  // Orange
       [59, 130, 246],  // Blue
@@ -93,203 +156,91 @@ export const exportToPDF = async (data: ExportData, elementRef: HTMLElement | nu
       [168, 85, 247]   // Purple
     ]
 
-    scenarios.forEach((scenario, index) => {
-      const x = margin + (index * 35)
-      const color = scenarioColors[index]
-      
+    scenarios.forEach((scenario, idx) => {
+      const x = margin + (idx * 35)
+      const color = scenarioColors[idx]
       pdf.setTextColor(color[0], color[1], color[2])
       pdf.text(scenario, x, yPosition)
-      
-      // Encontrar o resultado correspondente
-      const result = data.results.find(r => r.scenarios && r.scenarios[scenario.toLowerCase().replace('-', '')])
-      if (result) {
-        const scenarioData = result.scenarios[scenario.toLowerCase().replace('-', '')]
+
+      // busca qualquer resultado que tenha esse cenário
+      const key = scenario.toLowerCase().replace('-', '') as
+        'writeoff' | 'bear' | 'base' | 'bull' | 'moonshot'
+      const withScenario = data.results.find(r => r.scenarios && r.scenarios[key])
+      if (withScenario) {
+        const s = withScenario.scenarios![key]
         pdf.setFontSize(8)
-        pdf.text(`${scenarioData.probability}%`, x, yPosition + 8)
-        pdf.text(scenarioData.value, x, yPosition + 16)
+        pdf.text(`${s.probability}%`, x, yPosition + 5)
+        pdf.text(s.value, x, yPosition + 10)
         pdf.setFontSize(10)
       }
     })
 
     // Sensibilidade e ação
-    yPosition += 35
+    yPosition += 25
     pdf.setFontSize(11)
     pdf.setTextColor(0, 0, 0)
     pdf.text('Key Sensitivity:', margin, yPosition)
-    yPosition += lineHeight + 4
     pdf.setFontSize(10)
-    
-    // Wrap text for sensitivity with proper spacing
-    const sensitivityLines = wrapText(pdf, data.consensusSensitivity, pageWidth - 2 * margin - 10, 9)
-    sensitivityLines.forEach(line => {
-      pdf.text(line, margin + 5, yPosition)
-      yPosition += lineHeight + 2
-    })
-    
-    yPosition += 8
+    ensureSpace()
+    drawParagraphs(data.consensusSensitivity, margin + 5)
+
+    yPosition += 10
     pdf.setFontSize(11)
     pdf.text('Action Item:', margin, yPosition)
-    yPosition += lineHeight + 4
     pdf.setFontSize(10)
-    
-    // Wrap text for action item with proper spacing
-    const actionLines = wrapText(pdf, data.actionItem, pageWidth - 2 * margin - 10, 9)
-    actionLines.forEach(line => {
-      pdf.text(line, margin + 5, yPosition)
-      yPosition += lineHeight + 2
-    })
+    ensureSpace()
+    drawParagraphs(data.actionItem, margin + 5)
 
-    // Análises detalhadas com reasoning
-    yPosition += sectionSpacing
+    // Análises detalhadas
+    yPosition += 10
     pdf.setFontSize(12)
     pdf.setTextColor(0, 0, 0)
     pdf.text('Detailed Analysis by Lens:', margin, yPosition)
 
-    // Para cada lente, adicionar análise detalhada
-    data.results.forEach((result, index) => {
-      yPosition += 20
-      
-      // Verificar se há espaço suficiente na página
-      if (yPosition > pageHeight - 120) {
-        pdf.addPage()
-        yPosition = 40
-      }
-      
+    for (const result of data.results) {
+      yPosition += 15
+      ensureSpace(20)
+
+      // faixa azul da seção
       pdf.setFontSize(11)
       pdf.setFillColor(59, 130, 246)
       pdf.setTextColor(255, 255, 255)
-      pdf.rect(margin, yPosition - 8, pageWidth - 2 * margin, 12, 'F')
-      pdf.text(`${result.lens} Lens Analysis`, margin + 8, yPosition)
-      
-      yPosition += 18
+      pdf.rect(margin, yPosition - 5, pageWidth - 2 * margin, 8, 'F')
+      pdf.text(`${result.lens} Lens Analysis`, margin + 5, yPosition)
+
+      yPosition += 10
       pdf.setTextColor(0, 0, 0)
       pdf.setFontSize(9)
-      
-      // Adicionar cenários com reasoning
-      pdf.setFontSize(10)
-      pdf.text('Valuation Scenarios & Reasoning:', margin + 5, yPosition)
-      yPosition += lineHeight + 2
-      
-      const scenarioNames = ['Write-Off', 'Bear', 'Base', 'Bull', 'Moonshot']
-      scenarioNames.forEach((scenarioName, idx) => {
-        const scenarioKey = scenarioName.toLowerCase().replace('-', '')
-        const scenarioData = result.scenarios[scenarioKey]
-        
-        if (scenarioData) {
-          // Verificar se precisa de nova página
-          if (yPosition > pageHeight - 60) {
-            pdf.addPage()
-            yPosition = 40
-          }
-          
-          pdf.setFontSize(9)
-          pdf.setTextColor(59, 130, 246)
-          pdf.text(`${scenarioName}: ${scenarioData.probability}% | ${scenarioData.value}`, margin + 5, yPosition)
-          yPosition += lineHeight
-          
-          // Adicionar reasoning se disponível
-          if (scenarioData.reasoning) {
-            pdf.setFontSize(8)
-            pdf.setTextColor(0, 0, 0)
-            const reasoningLines = wrapText(pdf, scenarioData.reasoning, pageWidth - 2 * margin - 10, 8)
-            reasoningLines.forEach(line => {
-              pdf.text(line, margin + 10, yPosition)
-              yPosition += lineHeight
-            })
-            yPosition += 2
-          }
-        }
-      })
-      
-      // Adicionar WVT reasoning se disponível
-      if (result.wvtReasoning) {
-        yPosition += 8
-        pdf.setFontSize(9)
-        pdf.setTextColor(59, 130, 246)
-        pdf.text('WVT Calculation Logic:', margin + 5, yPosition)
-        yPosition += lineHeight
-        
-        pdf.setFontSize(8)
-        pdf.setTextColor(0, 0, 0)
-        const wvtLines = wrapText(pdf, result.wvtReasoning, pageWidth - 2 * margin - 10, 8)
-        wvtLines.forEach(line => {
-          // Verificar se precisa de nova página
-          if (yPosition > pageHeight - 40) {
-            pdf.addPage()
-            yPosition = 40
-          }
-          
-          pdf.text(line, margin + 10, yPosition)
-          yPosition += lineHeight
-        })
-        yPosition += 8
-      }
-      
-      // Dividir o texto da análise em linhas com muito melhor posicionamento
-      if (result.fullAnalysis) {
-        yPosition += 8
-        pdf.setFontSize(9)
-        pdf.setTextColor(59, 130, 246)
-        pdf.text('Full Analysis:', margin + 5, yPosition)
-        yPosition += lineHeight
-        
-        const maxWidth = pageWidth - 2 * margin - 10
-        const analysisLines = wrapText(pdf, result.fullAnalysis, maxWidth, 9)
-        
-        analysisLines.forEach(line => {
-          // Verificar se precisa de nova página
-          if (yPosition > pageHeight - 40) {
-            pdf.addPage()
-            yPosition = 40
-          }
-          
-          pdf.text(line, margin + 5, yPosition)
-          yPosition += lineHeight + 1
-        })
-        
-        yPosition += 12
-      }
-    })
 
-    // Salvar o PDF
-    const fileName = `IC_Report_${data.companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+      if (result.fullAnalysis) {
+        // divide o texto em blocos por linhas em branco duplas (ou título/tabela)
+        const blocks = result.fullAnalysis.split(/\n{2,}/)
+
+        for (const block of blocks) {
+          // tenta tabela Markdown primeiro
+          const rendered = tryRenderMarkdownTable(block)
+          if (rendered) continue
+
+          // caso contrário, imprime como parágrafo(s) com quebra automática
+          drawParagraphs(block)
+        }
+        yPosition += 2
+      }
+    }
+
+    // Salvar
+    const fileName = `IC_Report_${data.companyName.replace(/\s+/g, '_')}_${new Date()
+      .toISOString().split('T')[0]}.pdf`
     pdf.save(fileName)
 
     console.log('✅ PDF exportado com sucesso:', fileName)
     return fileName
-
   } catch (error) {
     console.error('❌ Erro ao exportar PDF:', error)
     throw new Error('Falha ao gerar PDF')
   }
 }
 
-// Helper function to properly wrap text and prevent overlap
-function wrapText(pdf: jsPDF, text: string, maxWidth: number, fontSize: number): string[] {
-  pdf.setFontSize(fontSize)
-  const words = text.split(' ')
-  const lines: string[] = []
-  let currentLine = ''
-  
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i]
-    const testLine = currentLine + (currentLine ? ' ' : '') + word
-    const testWidth = pdf.getTextWidth(testLine)
-    
-    if (testWidth > maxWidth && currentLine) {
-      lines.push(currentLine)
-      currentLine = word
-    } else {
-      currentLine = testLine
-    }
-  }
-  
-  if (currentLine) {
-    lines.push(currentLine)
-  }
-  
-  return lines
-}
 
 // Função alternativa usando html2canvas para capturar o elemento visual
 export const exportToPDFFromElement = async (elementRef: HTMLElement | null, fileName: string = 'report.pdf') => {
@@ -341,4 +292,67 @@ export const exportToPDFFromElement = async (elementRef: HTMLElement | null, fil
     console.error('❌ Erro ao exportar PDF:', error)
     throw new Error('Falha ao gerar PDF')
   }
-} 
+}
+
+// Abre uma nova janela com o conteúdo do elemento para pré-visualização de impressão
+export const openPrintPreviewFromElement = (elementRef: HTMLElement | null, options: { title?: string; css?: string; autoPrint?: boolean } = {}) => {
+  if (!elementRef) {
+    console.error('Elemento de referência não encontrado para preview')
+    return
+  }
+
+  try {
+    const htmlContent = elementRef.innerHTML
+    const title = options.title || 'Print Preview'
+    const extraCss = options.css || ''
+    const autoPrint = !!options.autoPrint
+
+    const w = window.open('', '_blank', 'noopener,noreferrer')
+    if (!w) {
+      console.error('Não foi possível abrir a janela de pré-visualização. Verifique o bloqueador de pop-ups.')
+      return
+    }
+
+    w.document.open()
+    w.document.write(`
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          /* básico para garantir leitura e boa impressão */
+          body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; color: #000; }
+          img { max-width: 100%; height: auto; }
+          ${extraCss}
+          @media print { #preview-toolbar { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div id="print-root">
+          ${htmlContent}
+        </div>
+
+        <div id="preview-toolbar" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
+          <button id="printBtn" style="margin-right:8px;">Imprimir</button>
+          <button id="closeBtn">Fechar</button>
+        </div>
+
+        <script>
+          document.getElementById('printBtn').addEventListener('click', function () { window.print(); });
+          document.getElementById('closeBtn').addEventListener('click', function () { window.close(); });
+          ${autoPrint ? "setTimeout(function(){ window.print(); }, 200);" : ''}
+        </script>
+      </body>
+      </html>
+    `)
+    w.document.close()
+    w.focus()
+
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'));
+    styles.forEach(n => w.document.head.appendChild(n.cloneNode(true)));
+
+  } catch (err) {
+    console.error('Erro ao abrir preview de impressão:', err)
+  }
+}

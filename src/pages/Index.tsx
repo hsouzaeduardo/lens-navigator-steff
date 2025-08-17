@@ -95,7 +95,8 @@ const Index = () => {
               base: { probability: 25, value: "$75M" },
               bull: { probability: 15, value: "$150M" },
               moonshot: { probability: 5, value: "$300M" }
-            }
+            },
+            nonObviousTakeaway: `${lens.name} non-obvious insight: The company's ${lens.name.toLowerCase()} positioning reveals hidden ${lens.name === 'Skeptical' ? 'risks' : lens.name === 'Contrarian' ? 'opportunities' : lens.name === 'Optimistic' ? 'potential' : 'value'} that others may miss.`
           }
           
           results.push(lensResult)
@@ -230,6 +231,7 @@ const Index = () => {
         strongNo: `$${(parseFloat(weightedValuation.replace('$', '').replace(/[MB]/g, '')) * 0.33).toFixed(1)}M+`
       },
       fundLogic: `${lensName} investment logic for ${companyName}: Basic fallback analysis.`,
+      nonObviousTakeaway: `${lensName} non-obvious insight for ${companyName}: The company's ${lensName.toLowerCase()} positioning reveals hidden ${lensName === 'Skeptical' ? 'risks' : lensName === 'Contrarian' ? 'opportunities' : lensName === 'Optimistic' ? 'potential' : 'value'} that others may miss.`,
     }
     
     console.log(`🎉 Fallback result for ${lensName}:`, result)
@@ -323,6 +325,7 @@ const Index = () => {
         strongNo: "$22.5M+"
       },
       fundLogic: "Skeptical investment logic: Fund focuses on risk mitigation and conservative valuations. Entry price decisions based on market reality and competitive pressure rather than optimistic projections. Company's specialized positioning creates some advantages but market headwinds require careful consideration.",
+      nonObviousTakeaway: "Skeptical non-obvious insight: The company's specialized positioning in healthtech reveals hidden regulatory risks that others may miss, as the space faces increasing scrutiny and competitive pressure from well-funded players.",
       status: "completed"
     },
     {
@@ -410,6 +413,7 @@ const Index = () => {
         strongNo: "$95M+"
       },
       fundLogic: "Contrarian investment logic: Fund focuses on companies with strategic positioning that consensus views miss. Entry price decisions based on strategic value and market mispricing rather than just financial metrics. Company's unique positioning creates asymmetric opportunities for contrarian investors.",
+      nonObviousTakeaway: "Contrarian non-obvious insight: The company's unique strategic positioning in healthtech reveals hidden market mispricing that others miss, as the space faces increasing scrutiny but this company's approach creates asymmetric opportunities.",
       status: "completed"
     },
     {
@@ -497,6 +501,7 @@ const Index = () => {
         strongNo: "$173M+"
       },
       fundLogic: "Optimistic investment logic: Fund focuses on companies with strong strategic positioning and execution capability. Entry price decisions based on strategic value and growth potential rather than just financial metrics. Company's strategic advantages create significant upside potential.",
+      nonObviousTakeaway: "Optimistic non-obvious insight: The company's strategic positioning in healthtech reveals hidden growth potential that others may miss, as the space faces increasing scrutiny but this company's approach creates asymmetric opportunities for market expansion.",
       status: "completed"
     },
     {
@@ -584,6 +589,7 @@ const Index = () => {
         strongNo: "$66.7M+"
       },
       fundLogic: "CFO investment logic: Fund focuses on companies with sustainable business models and operational efficiency. Entry price decisions based on business model quality and sustainability rather than just financial metrics. Company's sustainable practices create steady growth potential.",
+      nonObviousTakeaway: "CFO non-obvious insight: The company's sustainable business model in healthtech reveals hidden operational value that others may miss, as the space faces increasing scrutiny but this company's approach creates sustainable competitive advantages through unit economics.",
       status: "completed"
     }
   ]

@@ -82,6 +82,7 @@ IMPORTANT: You must return ONLY valid JSON that matches this exact structure - n
     "strongNo": "$W+"
   },
   "fundLogic": "Investment logic for this lens",
+  "nonObviousTakeaway": "One non-obvious insight about this opportunity (25 words max)",
   "status": "completed"
 }
 

@@ -157,6 +157,7 @@ export interface LensResult {
     strongNo: string;
   }
   fundLogic?: string;
+  nonObviousTakeaway?: string // One non-obvious insight about this opportunity
   fullAnalysis?: string // Full detailed analysis output
   status: "completed" | "running" | "pending"
 }
@@ -253,6 +254,17 @@ function PVWTReasoning({ result }: { result: LensResult }) {
             <div className="text-sm text-muted-foreground font-medium mb-2">Key Sensitivity</div>
             <div className="text-base text-gray-800">{result.keySensitivity}</div>
           </div>
+
+          {/* Non-Obvious Takeaway */}
+          {result.nonObviousTakeaway && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-sm text-blue-700 font-medium mb-2 flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Non-Obvious Takeaway
+              </div>
+              <div className="text-base text-blue-800 italic">"{result.nonObviousTakeaway}"</div>
+            </div>
+          )}
 
           {/* View Full Analysis Button */}
           <div className="text-center">

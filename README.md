@@ -1,4 +1,14 @@
-# Welcome to your Lovable project
+# Lens Navigator - AI Investment Committee Platform
+
+An AI-powered investment analysis platform featuring multi-lens evaluation and deep research capabilities.
+
+## Features
+
+- **4-Lens Analysis**: Quick investment evaluation through Skeptical, Contrarian, Optimistic, and CFO perspectives
+- **Deep Research**: Comprehensive multi-source analysis using OpenAI's o3-deep-research model
+- **Vector Store Integration**: Analyze private documents alongside public data
+- **Background Processing**: Long-running research tasks with progress tracking
+- **Export Capabilities**: Generate PDF reports and structured data exports
 
 ## Project info
 
@@ -32,9 +42,35 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Set up environment variables
+cp .env.example .env
+# Add your API keys to .env file
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
+
+## Deep Research Setup
+
+To use the deep research features, you'll need:
+
+1. **OpenAI API Access**
+   - Sign up at [platform.openai.com](https://platform.openai.com)
+   - Get access to o3-deep-research model (contact OpenAI sales)
+   - Add your API key to `.env`: `VITE_OPENAI_API_KEY=sk-...`
+
+2. **Configure Webhooks (Optional)**
+   - Set up webhook endpoint in OpenAI dashboard
+   - Deploy the Supabase function: `supabase functions deploy openai-webhook`
+
+3. **Quick Setup**
+   ```bash
+   # Run the setup script
+   chmod +x setup-deep-research.sh
+   ./setup-deep-research.sh
+   ```
+
+For detailed instructions, see [DEEP_RESEARCH_GUIDE.md](./DEEP_RESEARCH_GUIDE.md)
 
 **Edit a file directly in GitHub**
 

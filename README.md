@@ -1,109 +1,98 @@
-# Lens Navigator - AI Investment Committee Platform
+# Lens Navigator
 
-An AI-powered investment analysis platform featuring multi-lens evaluation and deep research capabilities.
+Lens Navigator is an AI-powered investment analysis tool that uses a 4-lens framework to provide comprehensive analysis of potential investments. The application integrates with Zapier to connect to OpenAI's Deep Research model, offering in-depth analysis through four different perspectives: Skeptical, Contrarian, Optimistic, and CFO.
 
 ## Features
 
-- **4-Lens Analysis**: Quick investment evaluation through Skeptical, Contrarian, Optimistic, and CFO perspectives
-- **Deep Research**: Comprehensive multi-source analysis using OpenAI's o3-deep-research model
-- **Vector Store Integration**: Analyze private documents alongside public data
-- **Background Processing**: Long-running research tasks with progress tracking
-- **Export Capabilities**: Generate PDF reports and structured data exports
+- **4-Lens Analysis Framework**: Analyze investments from multiple perspectives
+- **Zapier Integration**: Connect to OpenAI's Deep Research model via Zapier webhooks
+- **Document Upload**: Include documents in your analysis for more context
+- **Apple-Inspired UI**: Clean, modern interface following Apple's Human Interface Guidelines
+- **Dark Mode Support**: Toggle between light and dark themes
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Project info
+## Getting Started
 
-**URL**: https://lovable.dev/projects/bf36df75-a331-4572-bbbd-e5b3ed2b209d
+### Prerequisites
 
-## How can I edit this code?
+- Node.js 18 or higher
+- npm or bun package manager
+- A Zapier account with webhooks configured for OpenAI Deep Research
 
-There are several ways of editing your application.
+### Installation
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/bf36df75-a331-4572-bbbd-e5b3ed2b209d) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Set up environment variables
-cp .env.example .env
-# Add your API keys to .env file
-
-# Step 5: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-## Deep Research Setup
-
-To use the deep research features, you'll need:
-
-1. **OpenAI API Access**
-   - Sign up at [platform.openai.com](https://platform.openai.com)
-   - Get access to o3-deep-research model (contact OpenAI sales)
-   - Add your API key to `.env`: `VITE_OPENAI_API_KEY=sk-...`
-
-2. **Configure Webhooks (Optional)**
-   - Set up webhook endpoint in OpenAI dashboard
-   - Deploy the Supabase function: `supabase functions deploy openai-webhook`
-
-3. **Quick Setup**
+1. Clone the repository:
    ```bash
-   # Run the setup script
-   chmod +x setup-deep-research.sh
-   ./setup-deep-research.sh
+   git clone https://github.com/YOUR_USERNAME/lens-navigator.git
+   cd lens-navigator
    ```
 
-For detailed instructions, see [DEEP_RESEARCH_GUIDE.md](./DEEP_RESEARCH_GUIDE.md)
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-**Edit a file directly in GitHub**
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+4. Start the local CORS proxy (for local development):
+   ```bash
+   npm run proxy
+   ```
 
-**Use GitHub Codespaces**
+## Deployment
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Vercel Deployment
 
-## What technologies are used for this project?
+The easiest way to deploy Lens Navigator is with Vercel:
 
-This project is built with:
+1. Import your GitHub repository to Vercel
+2. Configure the project with these settings:
+   - Framework Preset: Vite
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+   - Root Directory: `./`
+3. Click "Deploy"
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+For detailed deployment instructions, see [VERCEL_DEPLOYMENT_STEPS.md](VERCEL_DEPLOYMENT_STEPS.md).
 
-## How can I deploy this project?
+## Configuration
 
-Simply open [Lovable](https://lovable.dev/projects/bf36df75-a331-4572-bbbd-e5b3ed2b209d) and click on Share -> Publish.
+### Zapier Webhooks
 
-## Can I connect a custom domain to my Lovable project?
+The application is configured to use Zapier webhooks for connecting to OpenAI's Deep Research model. Update the webhook URLs in `src/lib/zapier-lens-urls.ts`:
 
-Yes, you can!
+```typescript
+const PROD_URLS = {
+  Skeptical: 'https://hooks.zapier.com/hooks/catch/YOUR_ID/YOUR_HOOK/',
+  Contrarian: 'https://hooks.zapier.com/hooks/catch/YOUR_ID/YOUR_HOOK/',
+  Optimistic: 'https://hooks.zapier.com/hooks/catch/YOUR_ID/YOUR_HOOK/',
+  CFO: 'https://hooks.zapier.com/hooks/catch/YOUR_ID/YOUR_HOOK/',
+  Unified: 'https://hooks.zapier.com/hooks/catch/YOUR_ID/YOUR_HOOK/'
+};
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Architecture
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- **React**: Frontend framework for UI components
+- **Vite**: Build tool for fast development
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **Framer Motion**: Animation library for UI interactions
+- **Zapier Webhooks**: Integration point for OpenAI Deep Research API
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgements
+
+- OpenAI for the Deep Research API
+- Zapier for webhook integration
+- Apple Human Interface Guidelines for design inspiration

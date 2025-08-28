@@ -871,7 +871,7 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
                     id="skeptical-prompt"
                     value={prompts.skeptical}
                     onChange={(e) => setPrompts({ ...prompts, skeptical: e.target.value })}
-                    className="mt-2 min-h-[120px] font-mono text-sm"
+                    className="mt-2 min-h-[120px] font-sans text-sm leading-relaxed"
                     placeholder="Enter the prompt for the skeptical analysis..."
                   />
                 </div>
@@ -882,7 +882,7 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
                     id="contrarian-prompt"
                     value={prompts.contrarian}
                     onChange={(e) => setPrompts({ ...prompts, contrarian: e.target.value })}
-                    className="mt-2 min-h-[120px] font-mono text-sm"
+                    className="mt-2 min-h-[120px] font-sans text-sm leading-relaxed"
                     placeholder="Enter the prompt for the contrarian analysis..."
                   />
                 </div>
@@ -895,7 +895,7 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
                     id="optimistic-prompt"
                     value={prompts.optimistic}
                     onChange={(e) => setPrompts({ ...prompts, optimistic: e.target.value })}
-                    className="mt-2 min-h-[120px] font-mono text-sm"
+                    className="mt-2 min-h-[120px] font-sans text-sm leading-relaxed"
                     placeholder="Enter the prompt for the optimistic analysis..."
                   />
                 </div>
@@ -906,7 +906,7 @@ export function AnalysisForm({ onSubmit, isLoading = false }: AnalysisFormProps)
                     id="cfo-prompt"
                     value={prompts.cfo}
                     onChange={(e) => setPrompts({ ...prompts, cfo: e.target.value })}
-                    className="mt-2 min-h-[120px] font-mono text-sm"
+                    className="mt-2 min-h-[120px] font-sans text-sm leading-relaxed"
                     placeholder="Enter the prompt for the CFO analysis..."
                   />
                 </div>
